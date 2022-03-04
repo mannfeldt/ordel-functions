@@ -7,13 +7,14 @@ admin.initializeApp(functions.config().firebase);
 exports.nextTurnPush = functions.firestore
   .document("multiplayer_games/{gameId}")
   .onUpdate((change, context) => {
-    const newPlayer = change.after.data().currentPlayer;
+    const before = change.before.data();
+    const after = change.after.data();
 
-    const previousPlayer = change.before.data().currentPlayer;
-
-    if (newPlayer === previousPlayer) {
+    if (before.rounds.length === after.rounds.length) {
       return null;
     }
+
+    const newPlayer = after.rounds[after.rounds.length - 1].user;
 
     var db = admin.firestore();
 
@@ -29,11 +30,11 @@ exports.nextTurnPush = functions.firestore
             title: "Its your turn to play",
             body: "click here to jump into the action",
             sound: "default",
-            click_action: "FLUTTER_NOTIFICATION_CLICK",
           },
           data: {
+            click_action: "FLUTTER_NOTIFICATION_CLICK",
             push_func: "nextTurnPush",
-            game: change.after.data().id,
+            game: after.id,
           },
         };
 
@@ -54,9 +55,9 @@ exports.gameFinishedPush = functions.https.onCall((data, context) => {
       title: "Game finished!",
       body: "Click here to se result!",
       sound: "default",
-      click_action: "FLUTTER_NOTIFICATION_CLICK",
     },
     data: {
+      click_action: "FLUTTER_NOTIFICATION_CLICK",
       push_func: "gameFinishedPush",
       game: gameId,
     },
@@ -82,9 +83,9 @@ exports.newFollowerPush = functions.https.onCall((data, context) => {
       title: followerName + " just added you as friend",
       body: "Why dont you invite them to a game?",
       sound: "default",
-      click_action: "FLUTTER_NOTIFICATION_CLICK",
     },
     data: {
+      click_action: "FLUTTER_NOTIFICATION_CLICK",
       push_func: "newFollowerPush",
       follower: followerUid,
       name: followerName,
@@ -108,9 +109,9 @@ exports.newGameInvitePush = functions.https.onCall((data, context) => {
       title: "New game invite!",
       body: hostName + " has invited you to play a game",
       sound: "default",
-      click_action: "FLUTTER_NOTIFICATION_CLICK",
     },
     data: {
+      click_action: "FLUTTER_NOTIFICATION_CLICK",
       push_func: "newGameInvitePush",
       game: gameId,
       name: hostName,
@@ -144,9 +145,9 @@ exports.acceptedGameInvitePush = functions.https.onCall((data, context) => {
             gameUnansweredCount +
             " more",
       sound: "default",
-      click_action: "FLUTTER_NOTIFICATION_CLICK",
     },
     data: {
+      click_action: "FLUTTER_NOTIFICATION_CLICK",
       push_func: "acceptedGameInvitePush",
       game: gameId,
       name: acceptedName,
@@ -195,9 +196,9 @@ exports.declinedGameInvitePush = functions.https.onCall((data, context) => {
             gameUnansweredCount +
             " more",
       sound: "default",
-      click_action: "FLUTTER_NOTIFICATION_CLICK",
     },
     data: {
+      click_action: "FLUTTER_NOTIFICATION_CLICK",
       push_func: "declinedGameInvitePush",
       game: gameId,
       name: declinedName,
@@ -237,9 +238,9 @@ exports.declinedGameInviteDeletePush = functions.https.onCall(
         title: declinedName + " declined your game invite",
         body: "Game was removed as there is not enough players",
         sound: "default",
-        click_action: "FLUTTER_NOTIFICATION_CLICK",
       },
       data: {
+        click_action: "FLUTTER_NOTIFICATION_CLICK",
         push_func: "declinedGameInviteDeletePush",
         game: gameId,
         name: declinedName,
